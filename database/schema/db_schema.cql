@@ -73,11 +73,12 @@ CREATE TABLE IF NOT EXISTS smartpot.thing_actions(
 			'compaction_window_size': 7};
 
 
-CREATE TABLE IF NOT EXISTS smartpot.msgs_to_things(
+CREATE TABLE IF NOT EXISTS smartpot.msg_to_things_queue(
     device_id    text,
     ts          timestamp,
     topic       text,
-    msg         text
+    msg         text,
+    queued      tinyint
 )
 
 

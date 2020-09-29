@@ -37,7 +37,7 @@ services:
         #       memory: 1G
     emqx:
       build: ./emqx_cassandra_backend/
-      image: emqx-cass-prod
+      image: emqx-cass-dev
       depends_on:
         - cassandra-0
           #condition: service_healthy
