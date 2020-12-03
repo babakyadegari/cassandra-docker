@@ -1,0 +1,11 @@
+FORM cassandra:3.10
+
+RUN mkdir -p /opt/data/
+
+COPY db_schema.sql /opt/data/db_schema.sql
+
+COPY seed_db.sh seed_db.sh
+
+RUN chmod +x seed_db.sh
+
+ENTRYPOINT ["seed_db.sh"]

@@ -74,12 +74,12 @@ CREATE TABLE IF NOT EXISTS smartpot.thing_actions(
 
 
 CREATE TABLE IF NOT EXISTS smartpot.msg_to_things_queue(
-    device_id    text,
+    device_id    text primary key,
     ts          timestamp,
     topic       text,
     msg         text,
-    queued      tinyint
-)
+    queued      tinyint,
+);
 
 
 --CREATE TABLE mqtt_acl (

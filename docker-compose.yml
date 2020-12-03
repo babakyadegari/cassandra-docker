@@ -2,8 +2,10 @@
 version: '3'
 services:
     cassandra-0:
-        build: ./database/
-        image: cassandra-base
+        #build: ./database/
+        image: cassandra:latest
+        # entrypoint: ["/docker-entrypoint.sh"]
+        # command: ["/seed_db.sh"]
         networks:
             front:
                 ipv4_address: 172.20.238.10
@@ -35,9 +37,28 @@ services:
         #     limits:
         #       cpus: '0.1'
         #       memory: 1G
+
+    cassandra-init:
+      container_name: emqx-cassandra-init
+      image: cassandra:latest
+      depends_on:
+        - cassandra-0
+      volumes:
+        - ./database/schema/db_schema.cql:/db_schema.cql
+      command: /bin/sh -c "sleep 20 && echo loading cassandra-0 keyspace && cqlsh cassandra-0 -f /db_schema.cql"
+      networks:
+          front:
+              ipv4_address: 172.20.238.15
+      deploy:
+        restart_policy:
+          condition: on-failure
+          delay: 5s
+          max_attempts: 3
+          window: 120s
+
     emqx:
-      build: ./emqx_cassandra_backend/
-      image: emqx-cass-dev
+      image: byadegari/docker-emqx-prod:latest
+      restart: on-failure
       depends_on:
         - cassandra-0
           #condition: service_healthy
@@ -48,10 +69,29 @@ services:
           - "1883:1883"
           - "18083:18083"
           - "8083:8083"
-      # volumes:
-      #     - ./emqx_cassandra_backend:/emqx-rel/_build/emqx/lib/emqx_cassandra_backend/
-          #- ./emqx_cassandra_backend:/emqx-rel/_build/emqx+test/lib/emqx_cassandra_backend/
-          #- ./emqx_cassandra_backend:/emqx-rel/_build/default/lib/emqx_cassandra_backend/
+
+    emqx-dev:
+      image: emqx-builder:latest
+      #entrypoint: ["/docker-entrypoint-dev.sh"]
+      command: /bin/bash
+      #entrypoint: ["cat asghar"]
+      stdin_open: true # docker run -i
+      tty: true        # docker run -t
+
+      #restart: on-failure
+      depends_on:
+        - cassandra-0
+          #condition: service_healthy
+      networks:
+          front:
+              ipv4_address: 172.20.238.16
+      ports:
+          - "1883:1883"
+          - "18083:18083"
+          - "8083:8083"
+      volumes:
+          #- ./emqx_cassandra_backend:/emqx-rel/_build/emqx/lib/emqx_cassandra_backend
+          - ./emqx_cassandra_backend:/emqx_cassandra_backend
 
     api_service:
         build: ./WebServices/
@@ -59,6 +99,7 @@ services:
         depends_on:
           - cassandra-0
             #condition: service_healthy
+        restart: on-failure
         ports:
             - "3000:3000"
         volumes:
